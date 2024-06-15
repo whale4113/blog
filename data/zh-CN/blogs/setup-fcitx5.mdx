@@ -1,0 +1,73 @@
+---
+title: '在基于 Debian 的操作系统中使用中文拼音输入法'
+date: '2024-03-27'
+lastmod: '2024-03-29'
+tags: ['fcitx5']
+draft: false
+summary: '在基于 Debian 的操作系统中安裝 Fcitx5，以使用中文拼音输入法'
+---
+
+输入法（IME）是一种操作系统组件或程序，可让用户通过使用输入设备上的字符序列来生成输入设备上没有的字符。对于字形多于键盘按键的语言，通常需要使用输入法。[^1]
+
+大多数 IME 都是输入法框架（IMF）的一部分，它是一种允许用户在不同 IME 之间轻松切换的应用程序。最常见的 IMF 是 IBus（常用于基于 GTK 的环境，如 GNOME），其次是 Fcitx5（主要用于基于 Qt 的环境，如 KDE）、Scim、Fcitx 和 Uim。[^2]
+
+本文介绍如何安装 Fcitx5 输入法框架，以能够在基于 Debian 的操作系统中使用中文拼音输入法。
+
+## 安装 Fcitx5 和中文输入法扩展
+
+```bash
+sudo apt-get update && sudo apt-get install -y fcitx5 fcitx5-chinese-addons
+```
+
+> fcitx5-chinese-addons：它包括简体中文最常用的输入法，包括拼音和表格引擎（五笔等）[^3]。
+
+## 自动启动 Fcitx5
+
+```bash
+im-config -n fcitx5
+```
+
+然后重启会话以激活新的用户配置
+
+> im-config 是基于 debian 的发行版使用的特定工具。你也可以在命令行中运行 `im-config`，这会弹出一个向导，从中选择 fcitx5 即可。[^4]
+
+## 添加中文拼音输入法
+
+重启会话后，桌面右下角会出现输入法托盘图标，右键点击会弹出一个配置界面（fcitx5-configtool）。然后在配置界面中添加 Pinyin 输入法，之后可通过 `Ctrl+Space` 切换输入法。
+
+<iframe
+  title="Qt Widgets 版本"
+  src="https://www.youtube.com/embed/b6x2Y363la4?&rel=0"
+  width="100%"
+  allowFullScreen={true}
+  className="h-[300px] sm:h-[500px]"
+/>
+
+> fcitx5-configtool 是一个基于 Qt 的 GUI 工具，为 Fcitx5 提供用户友好的配置界面。[^5]
+
+## 其它问题
+
+### 使用 `Ctrl+Space` 时，不能在以下情况下触发 Fcitx5
+
+- Chromium 或任何其它基于 Chromium 的浏览器（如 Microsoft Edge）
+
+  我配置如下环境变量后，重新启动 Chromium 或使用 Electron 构建的应用程序，问题成功被解决了。[^6]
+
+  ```bash
+  export GTK_IM_MODULE=xim
+  export QT_IM_MODULE=fcitx
+  export XMODIFIERS=@im=fcitx
+  ```
+
+- 使用 Tauri 构建的应用程序
+
+  我在命令行运行 `sudo apt-get install ibus` 下载 IBus 后，问题成功被解决了。
+
+> 如果你遇到了上面沒有列举的问题，或许可以参考 [Fcitx Wiki: FAQ](https://fcitx-im.org/wiki/FAQ)
+
+[^1]: [Wikipedia: Input method](https://en.wikipedia.org/wiki/Input_method)
+[^2]: [Arch Linux Wiki: Input method](https://wiki.archlinux.org/title/Input_method)
+[^3]: [Debian Wiki: Fcitx5](https://wiki.debian.org/I18n/Fcitx5)
+[^4]: [Setup Fcitx: Autostart](https://fcitx-im.org/wiki/Setup_Fcitx_5#Autostart)
+[^5]: [Fcitx5: Configtool](<https://fcitx-im.org/wiki/Configtool_(Fcitx_5)>)
+[^6]: [Chrome or chromium can not use ibus](https://askubuntu.com/questions/1412097/chrome-or-chromium-can-not-use-ibus)

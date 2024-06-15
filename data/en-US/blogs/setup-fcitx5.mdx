@@ -1,0 +1,73 @@
+---
+title: 'Using Chinese Pinyin Input Method on Debian-based Operating Systems'
+date: '2024-03-27'
+lastmod: '2024-03-29'
+tags: ['fcitx5']
+draft: false
+summary: 'Installing Fcitx5 on Debian-based operating systems to use the Chinese Pinyin input method'
+---
+
+An input method (or input method editor, commonly abbreviated IME) is an operating system component or program that enables users to generate characters not natively available on their input devices by using sequences of characters (or mouse operations) that are available to them. Using an input method is usually necessary for languages that have more graphemes than there are keys on the keyboard. [^1]
+
+The most common IMF is IBus (often used in GTK-based environments like GNOME), followed by Fcitx5 (mostly used in Qt-based environments like KDE), Scim, Fcitx, and Uim. [^2]
+
+This article describes how to install the Fcitx5 input method framework to be able to use the Chinese Pinyin input method in Debian-based operating systems.
+
+## Install Fcitx5 and Chinese Input Method Engine
+
+```bash
+sudo apt-get update && sudo apt-get install -y fcitx5 fcitx5-chinese-addons
+```
+
+> fcitx5-chinese-addons: it includes most common input methods used by Simplified Chinese including engines for Pinyin and Table (Wubi, etc). [^3]。
+
+## Autostart
+
+```bash
+im-config -n fcitx5
+```
+
+Then restart the session to activate the new user configuration.
+
+> im-config a tool used by debian or debian based distribution. Just run `im-config` from command line after login to your graphics interface and it should pop up a wizard, just select fcitx5 from it. [^4]
+
+## Add Chinese Pinyin Input Method
+
+After restarting the session, the input method tray icon will appear at the bottom right corner of the desktop, right click on it to bring up a configuration interface (fcitx5-configtool). Then add Pinyin input method in the configuration interface, and then you can switch the input method by `Ctrl+Space`.
+
+<iframe
+  title="QWidget based"
+  src="https://www.youtube.com/embed/b6x2Y363la4?&rel=0"
+  width="100%"
+  allowFullScreen={true}
+  className="h-[300px] sm:h-[500px]"
+/>
+
+> fcitx5-configtool is a Qt-based GUI tool that provides user friendly configuration interface for Fcitx 5. [^5]
+
+## FAQ
+
+### When use Ctrl + Space, Fcitx cannot be triggered on
+
+- Chromium or any other chromium based browser (E.g. Microsoft Edge)
+
+  I configured the following environment variables and restarted Chromium or an application built with Electron and the issue was successfully resolved. [^6]
+
+  ```bash
+  export GTK_IM_MODULE=xim
+  export QT_IM_MODULE=fcitx
+  export XMODIFIERS=@im=fcitx
+  ```
+
+- Tauri based applications
+
+  The problem was solved after I ran `sudo apt-get install ibus` from the command line to download IBus.
+
+> If you are experiencing a problem not listed above, perhaps refer to the [Fcitx Wiki: FAQ](https://fcitx-im.org/wiki/FAQ)
+
+[^1]: [Wikipedia: Input method](https://en.wikipedia.org/wiki/Input_method)
+[^2]: [Arch Linux Wiki: Input method](https://wiki.archlinux.org/title/Input_method)
+[^3]: [Debian Wiki: Fcitx5](https://wiki.debian.org/I18n/Fcitx5)
+[^4]: [Setup Fcitx: Autostart](https://fcitx-im.org/wiki/Setup_Fcitx_5#Autostart)
+[^5]: [Fcitx5: Configtool](<https://fcitx-im.org/wiki/Configtool_(Fcitx_5)>)
+[^6]: [Chrome or chromium can not use ibus](https://askubuntu.com/questions/1412097/chrome-or-chromium-can-not-use-ibus)
