@@ -1,8 +1,8 @@
 import { defineDocumentType, ComputedFields, makeSource } from 'contentlayer2/source-files'
-import { writeFileSync } from 'fs'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import readingTime from 'reading-time'
 import { slug } from 'github-slugger'
-import path from 'path'
+import path from 'node:path'
 import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic'
 // Remark packages
 import remarkGfm from 'remark-gfm'
@@ -40,11 +40,13 @@ const icon = fromHtmlIsomorphic(
   { fragment: true }
 )
 
+const removeStartComponent = (pathname: string) => pathname.replace(/^.+?(\/)/, '')
+
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
   slug: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+    resolve: (doc) => removeStartComponent(removeStartComponent(doc._raw.flattenedPath)),
   },
   path: {
     type: 'string',
@@ -60,7 +62,7 @@ const computedFields: ComputedFields = {
 /**
  * Count the occurrences of all tags across blog posts and write to json file
  */
-function createTagCount(allBlogs) {
+function createTagCount(lang: string, allBlogs) {
   const tagCount: Record<string, number> = {}
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
@@ -74,78 +76,93 @@ function createTagCount(allBlogs) {
       })
     }
   })
-  writeFileSync('./app/tag-data.json', JSON.stringify(tagCount))
+  mkdirSync(`./data/${lang}`, { recursive: true })
+  writeFileSync(`./data/${lang}/tag-data.json`, JSON.stringify(tagCount))
 }
 
-function createSearchIndex(allBlogs) {
+function createSearchIndex(lang: string, allBlogs) {
   if (
     siteMetadata?.search?.provider === 'kbar' &&
     siteMetadata.search.kbarConfig.searchDocumentsPath
   ) {
+    mkdirSync(`public/${lang}`, {
+      recursive: true,
+    })
     writeFileSync(
-      `public/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
+      `public/${lang}/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
       JSON.stringify(allCoreContent(sortPosts(allBlogs)))
     )
     console.log('Local search index generated...')
   }
 }
 
-export const Blog = defineDocumentType(() => ({
-  name: 'Blog',
-  filePathPattern: 'blog/**/*.mdx',
-  contentType: 'mdx',
-  fields: {
-    title: { type: 'string', required: true },
-    date: { type: 'date', required: true },
-    tags: { type: 'list', of: { type: 'string' }, default: [] },
-    lastmod: { type: 'date' },
-    draft: { type: 'boolean' },
-    summary: { type: 'string' },
-    images: { type: 'json' },
-    authors: { type: 'list', of: { type: 'string' } },
-    layout: { type: 'string' },
-    bibliography: { type: 'string' },
-    canonicalUrl: { type: 'string' },
-  },
-  computedFields: {
-    ...computedFields,
-    structuredData: {
-      type: 'json',
-      resolve: (doc) => ({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: doc.title,
-        datePublished: doc.date,
-        dateModified: doc.lastmod || doc.date,
-        description: doc.summary,
-        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
-      }),
-    },
-  },
-}))
+const removeDashs = (lang: string) => lang.replaceAll('-', '')
 
-export const Authors = defineDocumentType(() => ({
-  name: 'Authors',
-  filePathPattern: 'authors/**/*.mdx',
-  contentType: 'mdx',
-  fields: {
-    name: { type: 'string', required: true },
-    avatar: { type: 'string' },
-    occupation: { type: 'string' },
-    company: { type: 'string' },
-    email: { type: 'string' },
-    twitter: { type: 'string' },
-    linkedin: { type: 'string' },
-    github: { type: 'string' },
-    layout: { type: 'string' },
-  },
-  computedFields,
-}))
+const toUppercase = (input: string) => input[0].toUpperCase() + input.slice(1)
+
+const defineBlogs = (lang: string) =>
+  defineDocumentType(() => ({
+    name: `${toUppercase(removeDashs(lang))}Blog`,
+    filePathPattern: `${lang}/blogs/**/*.{mdx,md}`,
+    contentType: 'mdx',
+    fields: {
+      title: { type: 'string', required: true },
+      date: { type: 'date', required: true },
+      tags: { type: 'list', of: { type: 'string' }, default: [] },
+      lastmod: { type: 'date' },
+      draft: { type: 'boolean' },
+      summary: { type: 'string' },
+      images: { type: 'json' },
+      authors: { type: 'list', of: { type: 'string' } },
+      layout: { type: 'string' },
+      bibliography: { type: 'string' },
+      canonicalUrl: { type: 'string' },
+    },
+    computedFields: {
+      ...computedFields,
+      structuredData: {
+        type: 'json',
+        resolve: (doc) => ({
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: doc.title,
+          datePublished: doc.date,
+          dateModified: doc.lastmod || doc.date,
+          description: doc.summary,
+          image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
+          url: new URL(doc._raw.flattenedPath, siteMetadata.siteUrl).toString(),
+        }),
+      },
+    },
+  }))
+
+const defineAuthors = (lang: string) =>
+  defineDocumentType(() => ({
+    name: `${toUppercase(removeDashs(lang))}Authors`,
+    filePathPattern: `${lang}/authors/**/*.mdx`,
+    contentType: 'mdx',
+    fields: {
+      name: { type: 'string', required: true },
+      avatar: { type: 'string' },
+      occupation: { type: 'string' },
+      company: { type: 'string' },
+      email: { type: 'string' },
+      twitter: { type: 'string' },
+      linkedin: { type: 'string' },
+      github: { type: 'string' },
+      layout: { type: 'string' },
+    },
+    computedFields,
+  }))
+
+export const EnUSBlogs = defineBlogs('en-US')
+export const ZhCNBlogs = defineBlogs('zh-CN')
+export const EnUSAuthors = defineAuthors('en-US')
+export const ZhCNAuthors = defineAuthors('zh-CN')
 
 export default makeSource({
   contentDirPath: 'data',
-  documentTypes: [Blog, Authors],
+  documentTypes: [EnUSBlogs, ZhCNBlogs, EnUSAuthors, ZhCNAuthors],
   mdx: {
     cwd: process.cwd(),
     remarkPlugins: [
@@ -175,8 +192,10 @@ export default makeSource({
     ],
   },
   onSuccess: async (importData) => {
-    const { allBlogs } = await importData()
-    createTagCount(allBlogs)
-    createSearchIndex(allBlogs)
+    const { allEnUSBlogs, allZhCNBlogs } = await importData()
+    createTagCount('en-US', allEnUSBlogs)
+    createTagCount('zh-CN', allZhCNBlogs)
+    createSearchIndex('en-US', allEnUSBlogs)
+    createSearchIndex('zh-CN', allZhCNBlogs)
   },
 })

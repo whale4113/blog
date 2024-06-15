@@ -1,25 +1,34 @@
-import projectsData from '@/data/projectsData'
+import { allProjects } from '@/data/projectsData'
 import Card from '@/components/Card'
 import { genPageMetadata } from 'app/seo'
+import { createTranslation } from '@/i18n/server'
 
-export const metadata = genPageMetadata({ title: 'Projects' })
+export async function generateMetadata({ params }: { params: { lang: string } }) {
+  const { lang } = params
+  const { t } = await createTranslation(lang)
+  return await genPageMetadata({ lang, title: t('projects') })
+}
 
-export default function Projects() {
+export default async function Projects({ params }: { params: { lang: string } }) {
+  const { lang } = params
+  const { t } = await createTranslation(lang)
+
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
         <div className="space-y-2 pb-8 pt-6 md:space-y-5">
           <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14">
-            Projects
+            {t('projects')}
           </h1>
           <p className="text-lg leading-7 text-gray-500 dark:text-gray-400">
-            Showcase your projects with a hero image (16 x 9)
+            {t('projects-description')}
           </p>
         </div>
         <div className="container py-12">
           <div className="-m-4 flex flex-wrap">
-            {projectsData.map((d) => (
+            {allProjects(lang).map((d) => (
               <Card
+                lang={lang}
                 key={d.title}
                 title={d.title}
                 description={d.description}
