@@ -13,6 +13,7 @@ import { ThemeProviders } from '../theme-providers'
 import { Metadata } from 'next'
 import { createTranslation } from '@/i18n/server'
 import { produce } from 'immer'
+import { Analytics as VercelAnalysis } from '@vercel/analytics/react'
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -116,6 +117,7 @@ export default function RootLayout({
             </div>
           </SectionContainer>
         </ThemeProviders>
+        <VercelAnalysis />
       </body>
     </html>
   )
