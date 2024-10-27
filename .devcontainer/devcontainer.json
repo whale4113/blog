@@ -4,6 +4,7 @@
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20.14.0"
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   }
 }
