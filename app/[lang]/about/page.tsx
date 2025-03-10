@@ -6,14 +6,14 @@ import { genPageMetadata } from 'app/seo'
 import { Author, allAuthors } from '@/data/index'
 import { createTranslation } from '@/i18n/server'
 
-export async function generateMetadata({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const { t } = await createTranslation(lang)
   return await genPageMetadata({ lang, title: t('about') })
 }
 
-export default function Page({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export default async function Page({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const author = allAuthors(lang).find((p) => p.slug === 'default') as Author
   const mainContent = coreContent(author)
 

@@ -24,9 +24,9 @@ const space_grotesk = Space_Grotesk({
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string }
+  params: Promise<{ lang: string }>
 }): Promise<Metadata> {
-  const { lang } = params
+  const { lang } = await params
   const { t } = await createTranslation(lang)
   const siteTitle = t(siteMetadata.title)
   const siteDescription = t(siteMetadata.description)
@@ -72,14 +72,14 @@ export async function generateMetadata({
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode
-  params: { lang: string }
+  params: Promise<{ lang: string }>
 }) {
-  const { lang } = params
+  const { lang } = await params
 
   const basePath = process.env.BASE_PATH || ''
 
@@ -89,11 +89,29 @@ export default function RootLayout({
       className={`${space_grotesk.variable} scroll-smooth`}
       suppressHydrationWarning
     >
-      <link rel="apple-touch-icon" sizes="76x76" href={`${basePath}/static/favicons/apple-touch-icon.png`} />
-      <link rel="icon" type="image/png" sizes="32x32" href={`${basePath}/static/favicons/favicon-32x32.png`} />
-      <link rel="icon" type="image/png" sizes="16x16" href={`${basePath}/static/favicons/favicon-16x16.png`} />
+      <link
+        rel="apple-touch-icon"
+        sizes="76x76"
+        href={`${basePath}/static/favicons/apple-touch-icon.png`}
+      />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href={`${basePath}/static/favicons/favicon-32x32.png`}
+      />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href={`${basePath}/static/favicons/favicon-16x16.png`}
+      />
       <link rel="manifest" href={`${basePath}/static/favicons/site.webmanifest`} />
-      <link rel="mask-icon" href={`${basePath}/static/favicons/safari-pinned-tab.svg`} color="#5bbad5" />
+      <link
+        rel="mask-icon"
+        href={`${basePath}/static/favicons/safari-pinned-tab.svg`}
+        color="#5bbad5"
+      />
       <meta name="msapplication-TileColor" content="#000000" />
       <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
@@ -104,7 +122,8 @@ export default function RootLayout({
             <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           ) : null}
           <SectionContainer>
-          <SearchProvider
+            <div className="flex h-screen flex-col justify-between font-sans">
+              <SearchProvider
                 searchConfig={produce(siteMetadata.search as SearchConfig, (draft) => {
                   if (draft.provider === 'kbar' && draft.kbarConfig.searchDocumentsPath) {
                     draft.kbarConfig.searchDocumentsPath = `${lang}/${draft.kbarConfig.searchDocumentsPath}`
@@ -115,6 +134,7 @@ export default function RootLayout({
                 <main className="mb-auto">{children}</main>
               </SearchProvider>
               <Footer lang={lang} />
+            </div>
           </SectionContainer>
         </ThemeProviders>
         <VercelAnalysis />

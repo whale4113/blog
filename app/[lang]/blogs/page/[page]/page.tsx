@@ -30,7 +30,7 @@ export default async function Page({ params }: { params: Promise<PageParams> }) 
   const posts = allCoreContent(sortPosts(allBlogs(lang)))
   const pageNumber = parseInt(page as string)
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)
-  
+
   // Return 404 for invalid page numbers or empty pages
   if (pageNumber <= 0 || pageNumber > totalPages || isNaN(pageNumber)) {
     return notFound()

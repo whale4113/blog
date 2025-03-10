@@ -5,14 +5,14 @@ import { genPageMetadata } from 'app/seo'
 import { createTranslation } from '@/i18n/server'
 import { allTags } from '@/data/index'
 
-export async function generateMetadata({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const { t } = await createTranslation(lang)
   return await genPageMetadata({ lang, title: t('tags'), description: t('things-i-blog-about') })
 }
 
-export default async function Page({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export default async function Page({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const tagCounts = allTags(lang)
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])

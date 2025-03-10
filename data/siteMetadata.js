@@ -1,3 +1,5 @@
+const enable = false
+
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
   title: 'title',
@@ -5,17 +7,17 @@ const siteMetadata = {
   headerTitle: 'header-title',
   description: 'description',
   theme: 'system',
-  siteUrl: 'https://lujunji.vercel.app/',
-  siteRepo: 'https://github.com/lujunji4113/blog',
+  siteUrl: 'https://www.lujunji.me/',
+  siteRepo: 'https://github.com/whale4113/blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
-  github: 'https://github.com/lujunji4113/blog',
-  medium: 'https://medium.com',
-  bluesky: 'https://bsky.app/',
+  github: 'https://github.com/whale4113/blog',
+  // medium: 'https://medium.com',
+  // bluesky: 'https://bsky.app/',
   locale: 'en-US',
   // set to true if you want a navbar fixed to the top
   stickyNav: false,
-  analytics: false && {
+  analytics: enable && {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
     // supports Plausible, Simple Analytics, Umami, Posthog or Google Analytics.
@@ -39,12 +41,12 @@ const siteMetadata = {
     //   googleAnalyticsId: '', // e.g. G-XXXXXXX
     // },
   },
-  newsletter: false && {
+  newsletter: enable && {
     // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus, beehive
     // Please add your .env file and modify it according to your selection
     provider: 'buttondown',
   },
-  comments: false && {
+  comments: enable && {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
     // Select a provider and use the environment variables associated to it

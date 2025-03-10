@@ -64,7 +64,7 @@ const computedFields: ComputedFields = {
 /**
  * Count the occurrences of all tags across blog posts and write to json file
  */
-function createTagCount(lang: string, allBlogs) {
+async function createTagCount(lang: string, allBlogs) {
   const tagCount: Record<string, number> = {}
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
@@ -139,25 +139,25 @@ const defineBlogs = (lang: string) =>
     },
   }))
 
-  const defineAuthors = (lang: string) =>
-    defineDocumentType(() => ({
-      name: `${toUppercase(removeDashs(lang))}Authors`,
-      filePathPattern: `${lang}/authors/**/*.mdx`,
-      contentType: 'mdx',
-      fields: {
-        name: { type: 'string', required: true },
-        avatar: { type: 'string' },
-        occupation: { type: 'string' },
-        company: { type: 'string' },
-        email: { type: 'string' },
-        twitter: { type: 'string' },
-        bluesky: { type: 'string' },
-        linkedin: { type: 'string' },
-        github: { type: 'string' },
-        layout: { type: 'string' },
-      },
-      computedFields,
-    }))
+const defineAuthors = (lang: string) =>
+  defineDocumentType(() => ({
+    name: `${toUppercase(removeDashs(lang))}Authors`,
+    filePathPattern: `${lang}/authors/**/*.mdx`,
+    contentType: 'mdx',
+    fields: {
+      name: { type: 'string', required: true },
+      avatar: { type: 'string' },
+      occupation: { type: 'string' },
+      company: { type: 'string' },
+      email: { type: 'string' },
+      twitter: { type: 'string' },
+      bluesky: { type: 'string' },
+      linkedin: { type: 'string' },
+      github: { type: 'string' },
+      layout: { type: 'string' },
+    },
+    computedFields,
+  }))
 
 export const EnUSBlogs = defineBlogs('en-US')
 export const ZhCNBlogs = defineBlogs('zh-CN')
@@ -166,6 +166,7 @@ export const ZhCNAuthors = defineAuthors('zh-CN')
 
 export default makeSource({
   contentDirPath: 'data',
+  contentDirExclude: ['**/tag-data.json'],
   documentTypes: [EnUSBlogs, ZhCNBlogs, EnUSAuthors, ZhCNAuthors],
   mdx: {
     cwd: process.cwd(),
@@ -197,10 +198,14 @@ export default makeSource({
     ],
   },
   onSuccess: async (importData) => {
-    const { allEnUSBlogs, allZhCNBlogs } = await importData()
-    createTagCount('en-US', allEnUSBlogs)
-    createTagCount('zh-CN', allZhCNBlogs)
-    createSearchIndex('en-US', allEnUSBlogs)
-    createSearchIndex('zh-CN', allZhCNBlogs)
+    try {
+      const { allEnUSBlogs, allZhCNBlogs } = await importData()
+      createTagCount('en-US', allEnUSBlogs)
+      createTagCount('zh-CN', allZhCNBlogs)
+      createSearchIndex('en-US', allEnUSBlogs)
+      createSearchIndex('zh-CN', allZhCNBlogs)
+    } catch (error) {
+      console.error(error)
+    }
   },
 })

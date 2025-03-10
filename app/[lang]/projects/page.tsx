@@ -3,14 +3,14 @@ import Card from '@/components/Card'
 import { genPageMetadata } from 'app/seo'
 import { createTranslation } from '@/i18n/server'
 
-export async function generateMetadata({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const { t } = await createTranslation(lang)
   return await genPageMetadata({ lang, title: t('projects') })
 }
 
-export default async function Projects({ params }: { params: { lang: string } }) {
-  const { lang } = params
+export default async function Projects({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
   const { t } = await createTranslation(lang)
 
   return (
