@@ -3,6 +3,8 @@ import { allEnUSBlogs } from 'contentlayer/generated'
 import siteMetadata from '@/data/siteMetadata'
 import { fallbackLng } from '@/i18n/settings'
 
+export const dynamic = 'force-static'
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = siteMetadata.siteUrl
 

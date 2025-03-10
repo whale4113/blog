@@ -1,8 +1,8 @@
-import ListLayout from '@/layouts/ListLayoutWithTags'
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
 import { genPageMetadata } from 'app/seo'
 import { allBlogs } from '@/data/index'
 import { createTranslation } from '@/i18n/server'
+import ListLayout from '@/layouts/ListLayoutWithTags'
 
 const POSTS_PER_PAGE = 5
 
@@ -12,17 +12,15 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   return await genPageMetadata({ lang, title: t('blog') })
 }
 
-export default async function BlogPage({ params }: { params: { lang: string } }) {
+export default async async function BlogPage({ params }: { params: { lang: string } }props: { searchParams: Promise<{ page: string }> }) {
   const { lang } = params
   const posts = allCoreContent(sortPosts(allBlogs(lang)))
   const pageNumber = 1
-  const initialDisplayPosts = posts.slice(
-    POSTS_PER_PAGE * (pageNumber - 1),
-    POSTS_PER_PAGE * pageNumber
-  )
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)
+  const initialDisplayPosts = posts.slice(0, POSTS_PER_PAGE * pageNumber)
   const pagination = {
     currentPage: pageNumber,
-    totalPages: Math.ceil(posts.length / POSTS_PER_PAGE),
+    totalPages: totalPages,
   }
 
   const { t } = await createTranslation(lang)

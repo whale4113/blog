@@ -8,15 +8,17 @@ import { createTranslation } from '@/i18n/server'
 import { NS, languages } from '@/i18n/settings'
 import { allBlogs, allTags } from '@/data/index'
 
+const POSTS_PER_PAGE = 5
+
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string; tag: string }
+  params: Promise<{ lang: string; tag: string }>
 }): Promise<Metadata> {
-  const { lang } = params
+  const { lang, tag: rawTag } = await params
   const { t } = await createTranslation(lang)
   const { t: translateTags } = await createTranslation(lang, NS.Tags)
-  const tag = decodeURI(params.tag)
+  const tag = decodeURI(rawTag)
   const translatedTag = translateTags(tag)
 
   return genPageMetadata({
@@ -51,9 +53,9 @@ interface PageParams {
   tag: string
 }
 
-export default function TagPage({ params }: { params: PageParams }) {
-  const { lang } = params
-  const tag = decodeURI(params.tag)
+export default async function TagPage({ params }: { params: Promise<PageParams> }) {
+  const { lang, tag: rawTag } = await params
+  const tag = decodeURI(rawTag)
   // Capitalize first letter and convert space to dash
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1)
   const filteredPosts = allCoreContent(
@@ -61,5 +63,13 @@ export default function TagPage({ params }: { params: PageParams }) {
       allBlogs(lang).filter((post) => post.tags && post.tags.map((t) => slug(t)).includes(tag))
     )
   )
-  return <ListLayout lang={lang} posts={filteredPosts} title={title} />
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE)
+  const initialDisplayPosts = filteredPosts.slice(0, POSTS_PER_PAGE)
+  const pagination = {
+    currentPage: 1,
+    totalPages: totalPages,
+  }
+
+  return <ListLayout lang={lang} posts={filteredPosts} title={title}   initialDisplayPosts={initialDisplayPosts}
+  pagination={pagination} />
 }

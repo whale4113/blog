@@ -21,12 +21,11 @@ const layouts = {
   PostBanner,
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { lang: string; slug: string[] }
+export async function generateMetadata(props: {
+  params: Promise<{ lang: string; slug: string[] }>
 }): Promise<Metadata | undefined> {
   const { lang } = params
+  const params = await props.params
   const slug = decodeURI(params.slug.join('/'))
   const post = allBlogs(lang).find((p) => p.slug === slug)
   const authorList = post?.authors || ['default']
@@ -83,7 +82,7 @@ export async function generateMetadata({
 export const generateStaticParams = async (): Promise<PageParams[]> => {
   return languages
     .map((lang) => {
-      const paths = allBlogs(lang).map((blog) => ({ lang, slug: blog.slug.split('/') }))
+      const paths = allBlogs(lang).map((blog) => ({ lang, slug: blog.slug.split('/').map((name) => decodeURI(name)) }))
       return paths
     })
     .flat(1)
@@ -94,7 +93,8 @@ interface PageParams {
   slug: string[]
 }
 
-export default async function Page({ params }: { params: PageParams }) {
+export default async function Page(props: { params: Promise<PageParams> }) {
+  const params = await props.params
   const { lang } = params
   const slug = decodeURI(params.slug.join('/'))
   // Filter out drafts in production

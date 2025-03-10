@@ -18,11 +18,13 @@ import {
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeKatex from 'rehype-katex'
+import rehypeKatexNoTranslate from 'rehype-katex-notranslate'
 import rehypeCitation from 'rehype-citation'
 import rehypePrismPlus from 'rehype-prism-plus'
 import rehypePresetMinify from 'rehype-preset-minify'
 import siteMetadata from './data/siteMetadata'
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
+import prettier from 'prettier'
 
 const root = process.cwd()
 const isProduction = process.env.NODE_ENV === 'production'
@@ -56,7 +58,7 @@ const computedFields: ComputedFields = {
     type: 'string',
     resolve: (doc) => doc._raw.sourceFilePath,
   },
-  toc: { type: 'string', resolve: (doc) => extractTocHeadings(doc.body.raw) },
+  toc: { type: 'json', resolve: (doc) => extractTocHeadings(doc.body.raw) },
 }
 
 /**
@@ -77,7 +79,8 @@ function createTagCount(lang: string, allBlogs) {
     }
   })
   mkdirSync(`./data/${lang}`, { recursive: true })
-  writeFileSync(`./data/${lang}/tag-data.json`, JSON.stringify(tagCount))
+  const formatted = await prettier.format(JSON.stringify(tagCount, null, 2), { parser: 'json' })
+  writeFileSync(`./data/${lang}/tag-data.json`, formatted)
 }
 
 function createSearchIndex(lang: string, allBlogs) {
@@ -89,7 +92,7 @@ function createSearchIndex(lang: string, allBlogs) {
       recursive: true,
     })
     writeFileSync(
-      `public/${lang}/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
+      `public/${lang}/${path.basename(siteMetadata.search.kbarConfig.searchDocumentsPath)}`,
       JSON.stringify(allCoreContent(sortPosts(allBlogs)))
     )
     console.log('Local search index generated...')
@@ -136,24 +139,25 @@ const defineBlogs = (lang: string) =>
     },
   }))
 
-const defineAuthors = (lang: string) =>
-  defineDocumentType(() => ({
-    name: `${toUppercase(removeDashs(lang))}Authors`,
-    filePathPattern: `${lang}/authors/**/*.mdx`,
-    contentType: 'mdx',
-    fields: {
-      name: { type: 'string', required: true },
-      avatar: { type: 'string' },
-      occupation: { type: 'string' },
-      company: { type: 'string' },
-      email: { type: 'string' },
-      twitter: { type: 'string' },
-      linkedin: { type: 'string' },
-      github: { type: 'string' },
-      layout: { type: 'string' },
-    },
-    computedFields,
-  }))
+  const defineAuthors = (lang: string) =>
+    defineDocumentType(() => ({
+      name: `${toUppercase(removeDashs(lang))}Authors`,
+      filePathPattern: `${lang}/authors/**/*.mdx`,
+      contentType: 'mdx',
+      fields: {
+        name: { type: 'string', required: true },
+        avatar: { type: 'string' },
+        occupation: { type: 'string' },
+        company: { type: 'string' },
+        email: { type: 'string' },
+        twitter: { type: 'string' },
+        bluesky: { type: 'string' },
+        linkedin: { type: 'string' },
+        github: { type: 'string' },
+        layout: { type: 'string' },
+      },
+      computedFields,
+    }))
 
 export const EnUSBlogs = defineBlogs('en-US')
 export const ZhCNBlogs = defineBlogs('zh-CN')
@@ -186,6 +190,7 @@ export default makeSource({
         },
       ],
       rehypeKatex,
+      rehypeKatexNoTranslate,
       [rehypeCitation, { path: path.join(root, 'data') }],
       [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
       rehypePresetMinify,

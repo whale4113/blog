@@ -5,10 +5,12 @@ import { escape } from 'pliny/utils/htmlEscaper.js'
 import { createInstance } from 'i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
 import siteMetadata from '../data/siteMetadata.js'
-import allEnUSTags from '../data/en-US/tag-data.json' assert { type: 'json' }
-import allZhCNTags from '../data/zh-CN/tag-data.json' assert { type: 'json' }
+import allEnUSTags from '../data/en-US/tag-data.json' with { type: 'json' }
+import allZhCNTags from '../data/zh-CN/tag-data.json' with { type: 'json' }
 import { allEnUSBlogs, allZhCNBlogs } from '../.contentlayer/generated/index.mjs'
 import { sortPosts } from 'pliny/utils/contentlayer.js'
+
+const outputFolder = process.env.EXPORT ? 'out' : 'public'
 
 const allTags = (lang) => {
   switch (lang) {
@@ -94,14 +96,14 @@ async function generateRSS(lang, config, allBlogs, page = 'feed.xml') {
   // RSS for blog post
   if (publishPosts.length > 0) {
     const rss = await generateRss(lang, config, sortPosts(publishPosts))
-    writeFileSync(`./public/${lang}/${page}`, rss)
+    writeFileSync(`./${outputFolder}/${lang}/${page}`, rss)
   }
 
   if (publishPosts.length > 0) {
     for (const tag of Object.keys(allTags(lang))) {
       const filteredPosts = allBlogs.filter((post) => post.tags.map((t) => slug(t)).includes(tag))
       const rss = await generateRss(lang, config, filteredPosts, `/tags/${tag}/${page}`)
-      const rssPath = path.join('public', lang, 'tags', tag)
+      const rssPath = path.join(outputFolder, lang, 'tags', tag)
       mkdirSync(rssPath, { recursive: true })
       writeFileSync(path.join(rssPath, page), rss)
     }
